@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ main ]
 
+env:
+  IMAGE_NAME: flask-app
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -28,9 +31,10 @@ jobs:
       run: |
         python -m pytest test_app.py -v
 
-  build-docker:
+  build-and-push:
     runs-on: ubuntu-latest
     needs: test
+    if: github.ref == 'refs/heads/main'
     
     steps:
     - name: Checkout code
@@ -38,4 +42,15 @@ jobs:
     
     - name: Build Docker image
       run: |
-        docker build -t flask-app .
+        docker build -t $IMAGE_NAME .
+    
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+    
+    - name: Push Docker image to Docker Hub
+      run: |
+        docker tag $IMAGE_NAME ${{ secrets.DOCKER_USERNAME }}/$IMAGE_NAME:latest
+        docker push ${{ secrets.DOCKER_USERNAME }}/$IMAGE_NAME:latest
