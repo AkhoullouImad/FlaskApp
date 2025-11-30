@@ -5,3 +5,4 @@ def test_home():
     response = client.get("/")
     assert response.data == b"Hello, World!"
     assert response.status_code == 200
+def test_fail(): assert False
